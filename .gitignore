@@ -41,4 +41,5 @@ build/
 coverage/
 
 # Sistema
-Thumbs.db
+Thumbs.db*.zip
+CasaDeComidas-Cliente.zip
