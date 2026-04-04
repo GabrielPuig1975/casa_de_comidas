@@ -1,0 +1,44 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Entornos y configuraciones
+.env
+.env.local
+.env.production
+.env.development
+
+# Bases de datos
+*.sql
+*.db
+*.sqlite
+
+# Backend uploads
+backend/uploads/
+backend/temp/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Testing
+coverage/
+
+# Sistema
+Thumbs.db

@@ -1,0 +1,19 @@
+{
+  "name": "casa-de-comidas",
+  "version": "1.0.0",
+  "description": "Sitio web para negocio familiar de comidas",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\"",
+    "build": "pnpm --filter frontend build",
+    "preview": "pnpm --filter frontend preview",
+    "install:all": "pnpm install && cd frontend && pnpm install && cd ../backend && pnpm install"
+  },
+  "keywords": ["restaurant", "food", "ecommerce"],
+  "author": "Tu Nombre",
+  "license": "ISC",
+  "packageManager": "pnpm@10.32.1",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
