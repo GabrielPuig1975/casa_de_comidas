@@ -303,6 +303,162 @@ app.get('/api/check-payment/:paymentId', async (req, res) => {
   }
 });
 
+// ============ RUTAS DE CONFIGURACIÓN DE PAGOS ============
+
+// Obtener configuración de pagos (pública)
+app.get('/api/configuracion-pago', async (req, res) => {
+  try {
+    const [configs] = await pool.execute(
+      'SELECT nombre_proveedor, configuracion, activo FROM configuraciones_pago WHERE activo = 1'
+    );
+    
+    // Ocultar información sensible para el frontend público
+    const configsSanitizadas = configs.map(config => {
+      if (config.nombre_proveedor === 'mercadopago') {
+        // Solo devolver la public_key, no el access_token
+        const configData = JSON.parse(config.configuracion);
+        return {
+          nombre_proveedor: config.nombre_proveedor,
+          public_key: configData.public_key || '',
+          activo: config.activo
+        };
+      }
+      return config;
+    });
+    
+    res.json(configsSanitizadas);
+  } catch (error) {
+    console.error('Error al obtener configuración de pago:', error);
+    res.status(500).json({ error: 'Error al obtener configuración' });
+  }
+});
+
+// Guardar configuración de pago (solo admin)
+app.post('/api/configuracion-pago', authenticateToken, async (req, res) => {
+  try {
+    const { nombre_proveedor, configuracion } = req.body;
+    
+    // Verificar si ya existe
+    const [existing] = await pool.execute(
+      'SELECT id FROM configuraciones_pago WHERE nombre_proveedor = ?',
+      [nombre_proveedor]
+    );
+    
+    if (existing.length > 0) {
+      // Actualizar
+      await pool.execute(
+        'UPDATE configuraciones_pago SET configuracion = ?, updated_at = NOW() WHERE nombre_proveedor = ?',
+        [JSON.stringify(configuracion), nombre_proveedor]
+      );
+    } else {
+      // Insertar
+      await pool.execute(
+        'INSERT INTO configuraciones_pago (nombre_proveedor, configuracion) VALUES (?, ?)',
+        [nombre_proveedor, JSON.stringify(configuracion)]
+      );
+    }
+    
+    res.json({ 
+      message: 'Configuración guardada exitosamente',
+      proveedor: nombre_proveedor
+    });
+  } catch (error) {
+    console.error('Error al guardar configuración de pago:', error);
+    res.status(500).json({ error: 'Error al guardar configuración' });
+  }
+});
+
+// Obtener métodos de pago activos (público)
+app.get('/api/metodos-pago', async (req, res) => {
+  try {
+    const [metodos] = await pool.execute(
+      'SELECT id, nombre, icono, descripcion FROM metodos_pago WHERE activo = 1 ORDER BY orden'
+    );
+    res.json(metodos);
+  } catch (error) {
+    console.error('Error al obtener métodos de pago:', error);
+    res.status(500).json({ error: 'Error al obtener métodos de pago' });
+  }
+});
+
+// Actualizar método de pago (solo admin)
+app.put('/api/metodos-pago/:id', authenticateToken, async (req, res) => {
+  try {
+    const { activo, orden, nombre, descripcion, icono } = req.body;
+    
+    const updates = [];
+    const values = [];
+    
+    if (activo !== undefined) {
+      updates.push('activo = ?');
+      values.push(activo);
+    }
+    if (orden !== undefined) {
+      updates.push('orden = ?');
+      values.push(orden);
+    }
+    if (nombre !== undefined) {
+      updates.push('nombre = ?');
+      values.push(nombre);
+    }
+    if (descripcion !== undefined) {
+      updates.push('descripcion = ?');
+      values.push(descripcion);
+    }
+    if (icono !== undefined) {
+      updates.push('icono = ?');
+      values.push(icono);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    }
+    
+    values.push(req.params.id);
+    
+    await pool.execute(
+      `UPDATE metodos_pago SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+    
+    res.json({ message: 'Método de pago actualizado' });
+  } catch (error) {
+    console.error('Error al actualizar método de pago:', error);
+    res.status(500).json({ error: 'Error al actualizar' });
+  }
+});
+
+// Crear nuevo método de pago (solo admin)
+app.post('/api/metodos-pago', authenticateToken, async (req, res) => {
+  try {
+    const { nombre, icono, descripcion, orden } = req.body;
+    
+    const [result] = await pool.execute(
+      'INSERT INTO metodos_pago (nombre, icono, descripcion, orden) VALUES (?, ?, ?, ?)',
+      [nombre, icono, descripcion, orden || 999]
+    );
+    
+    res.status(201).json({ 
+      message: 'Método de pago creado',
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error('Error al crear método de pago:', error);
+    res.status(500).json({ error: 'Error al crear método de pago' });
+  }
+});
+
+// Eliminar método de pago (solo admin)
+app.delete('/api/metodos-pago/:id', authenticateToken, async (req, res) => {
+  try {
+    await pool.execute('DELETE FROM metodos_pago WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Método de pago eliminado' });
+  } catch (error) {
+    console.error('Error al eliminar método de pago:', error);
+    res.status(500).json({ error: 'Error al eliminar' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });

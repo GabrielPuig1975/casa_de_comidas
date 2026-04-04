@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🍽️ Casa de Comidas - Sistema de Gestión para Restaurantes
 
 Sistema completo de gestión de pedidos para restaurantes con panel de administración, carrito de compras y pasarela de pagos.
@@ -46,3 +47,7 @@ Sistema completo de gestión de pedidos para restaurantes con panel de administr
 ```bash
 git clone https://github.com/tu-usuario/casa-de-comidas.git
 cd casa-de-comidas
+=======
+# casa-de-comidas
+web page de casa de comidas
+>>>>>>> d2c1dcfb459fc6d6bdeb1f331b8868223c3eb2ec
